@@ -9,15 +9,21 @@ using System.Windows.Forms;
 using Rage.Native;
 using System.Drawing;
 using System.Diagnostics;
+using Albo1125.Common.CommonLibrary;
 
 namespace Traffic_Policer
 {
     internal static class SpeedChecker
     {
+        private static bool Blip;
         private static int CheckPoint;
+
+        private static int clase;
+        private static int pasageros;
+
         private static Vector3 CheckPointPosition;
         private static string TargetModel = "";
-        public static string SpeedUnit = "MPH";
+        public static string SpeedUnit = "KMH";
         private static int TargetSpeed = 0;
         private static string TargetFlag = "";
         //private static string TargetSpeedLimit = "";
@@ -41,11 +47,12 @@ namespace Traffic_Policer
         private static List<Ped> FlaggedDrivers = new List<Ped>();
         public static int FlagChance = 15;
         private static Color SpeedColour = Color.White;
-        public static int SpeedToColourAt = 70;
+        public static int SpeedToColourAt = 5;
         private static int xOffset = 0;
         private static int yOffset = 0;
         private static int zOffset = 0;
-        private static System.Media.SoundPlayer FlagBlipPlayer = new System.Media.SoundPlayer("lspdfr/audio/scanner/Traffic Policer Audio/FLAG_BLIP.wav");
+        private static System.Media.SoundPlayer FlagBlipPlayer = new System.Media.SoundPlayer("lspdfr/audio/scanner/midetector/FLAG_BLIP.wav");
+        private static System.Media.SoundPlayer InfraccionDetectada = new System.Media.SoundPlayer("lspdfr/audio/scanner/midetector/infraccion.wav");
         public static bool PlayFlagBlip = true;
         private static List<Vehicle> VehiclesNotFlagged = new List<Vehicle>();
 
@@ -63,7 +70,445 @@ namespace Traffic_Policer
         public static Keys ResetAverageSpeedCheckKey = Keys.PageDown;
         private static Color AverageSpeedCheckerColor = Color.White;
 
-        public static WeaponAsset speedgunWeapon = "WEAPON_MARKSMANPISTOL";
+        private static string[] infracciones = {
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA USANDO AURICULARES MIENTRAS CONDUCE",
+                "EL CONDUCTOR DEL VEHICULO NO PRESTA LA ATENCION NECESARIA A LA VIA",
+                "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE",
+                "EL CONDUCTOR ESTA CONTROLANDO DOCUMENTACION MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE HABER BEBIDO ALGO",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS",
+                "NO TIENE EL CINTURON PUESTO",
+                "TIENE EL CINTURON MAL PUESTO",
+                "EL VEHICULO NO LLEVA LAS LUCES PUESTAS",
+                "EL VEHICULO NO ESTA USANDO INTERMITENCIA",
+                "EL VEHICULO PARECE TIENE LA PRESION DE NEUMATICOS MUY BAJOS",
+                "EL CONDUCTOR ESTA COMIENDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET",
+                "EL CONDUCTOR ESTA MANIPULANDO UN IPOD",
+                "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV",
+                "EL CONDUCTOR SE ESTA MAQUILLANDOSE MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA PEINANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA AFEITANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA FUMANDO SIN MANTENER LA CONCENTRACION NECESARIA",
+                "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
+                "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCI",
+                "EL CONDUCTOR TIENE LA MUSICA DEL VEHICULO MUY ALTA"
+                };
+
+        private static string[] infracciones2 = {
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA USANDO AURICULARES MIENTRAS CONDUCE",
+                "EL CONDUCTOR DEL VEHICULO NO PRESTA LA ATENCION NECESARIA A LA VIA",
+                "EL CONDUCTOR ESTA CONTROLANDO DOCUMENTACION MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE ALCOHOLISMO",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS",
+                "EL VEHICULO PARECE TIENE LA PRESION DE NEUMATICOS MUY BAJOS",
+                "EL CONDUCTOR ESTA COMIENDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA MANIPULANDO UN IPOD",
+                "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV",
+                "EL CONDUCTOR SE ESTA MAQUILLANDOSE MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA PEINANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA AFEITANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA FUMANDO SIN MANTENER LA CONCENTRACION NECESARIA",
+                "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
+                "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCI"
+                };
+
+        private static string[] infracciones3 = {
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA USANDO AURICULARES MIENTRAS CONDUCE",
+                "EL CONDUCTOR DEL VEHICULO NO PRESTA LA ATENCION NECESARIA A LA VIA",
+                "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE",
+                "EL CONDUCTOR ESTA CONTROLANDO DOCUMENTACION MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE ALCOHOLISMO",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS",
+                "NO TIENE EL CINTURON PUESTO",
+                "TIENE EL CINTURON MAL PUESTO",
+                "EL VEHICULO PARECE TIENE LA PRESION DE NEUMATICOS MUY BAJOS",
+                "EL CONDUCTOR ESTA COMIENDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET",
+                "EL CONDUCTOR ESTA MANIPULANDO UN IPOD",
+                "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV",
+                "EL CONDUCTOR SE ESTA MAQUILLANDOSE MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA PEINANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA AFEITANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA FUMANDO SIN MANTENER LA CONCENTRACION NECESARIA",
+                "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
+                "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCI",
+                "EL CONDUCTOR TIENE LA MUSICA DEL VEHICULO MUY ALTA",
+                "EL CONDUCTOR ESTA MANUPULANDO ALBARANES O FACTURAS"
+                };
+
+
+
+        private static string[] infracciones4 = {
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA USANDO AURICULARES MIENTRAS CONDUCE",
+                "EL CONDUCTOR DEL VEHICULO NO PRESTA LA ATENCION NECESARIA A LA VIA",
+                "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE",
+                "EL CONDUCTOR ESTA CONTROLANDO DOCUMENTACION MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE HABER BEBIDO ALGO",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS",
+                "EL CONDUCTOR NO TIENE EL CINTURON PUESTO",
+                "EL CONDUCTOR TIENE EL CINTURON MAL PUESTO",
+                "EL PASAJERO NO TIENE EL CINTURON PUESTO",
+                "EL PASAJERO TIENE EL CINTURON MAL PUESTO",
+                "EL PASAJERO DISTRAE AL CONDUCOR",
+                "EL VEHICULO NO LLEVA LAS LUCES PUESTAS",
+                "EL VEHICULO NO ESTA USANDO INTERMITENCIA",
+                "PARECE EL PASAJERO Y EL CONDUCTOR ESTAN TENIENDO UNA FUERTE DISCUSION",
+                "PARECE EL PASAJERO TIENE ALGO ILEGAL EN LAS MANOS",
+                "PARECE EL PASAJERO ESCONDIO ALGO BAJO LAS PIERBAS",
+                "PARECE EL PASAJERO SE ESTA HACIENDO UN PORRO",
+                "EL VEHICULO PARECE TIENE LA PRESION DE NEUMATICOS MUY BAJOS",
+                "EL CONDUCTOR ESTA COMIENDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET",
+                "EL CONDUCTOR ESTA MANIPULANDO UN IPOD",
+                "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV",
+                "EL CONDUCTOR SE ESTA MAQUILLANDOSE MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA PEINANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA AFEITANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA FUMANDO SIN MANTENER LA CONCENTRACION NECESARIA",
+                "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
+                "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCIA",
+                "EL CONDUCTOR TIENE LA MUSICA DEL VEHICULO MUY ALTA"
+                };
+        private static string[] infracciones5 = {
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA USANDO AURICULARES MIENTRAS CONDUCE",
+                "EL CONDUCTOR DEL VEHICULO NO PRESTA LA ATENCION NECESARIA A LA VIA",
+                "EL CONDUCTOR ESTA CONTROLANDO DOCUMENTACION MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE ALCOHOLISMO",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS",
+                "EL VEHICULO PARECE TIENE LA PRESION DE NEUMATICOS MUY BAJOS",
+                "EL CONDUCTOR ESTA COMIENDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA MANIPULANDO UN IPOD",
+                "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV",
+                "EL CONDUCTOR SE ESTA MAQUILLANDOSE MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA PEINANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA AFEITANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA FUMANDO SIN MANTENER LA CONCENTRACION NECESARIA",
+                "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
+                "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCI"
+                };
+        private static string[] infracciones6 = {
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "NO SE HA DETECTADO NINGUNA INFRACCION",
+                "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA USANDO AURICULARES MIENTRAS CONDUCE",
+                "EL CONDUCTOR DEL VEHICULO NO PRESTA LA ATENCION NECESARIA A LA VIA",
+                "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE",
+                "EL CONDUCTOR ESTA CONTROLANDO DOCUMENTACION MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE ALCOHOLISMO",
+                "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS",
+                "NO TIENE EL CINTURON PUESTO",
+                "TIENE EL CINTURON MAL PUESTO",
+                "EL PASAJERO NO TIENE EL CINTURON PUESTO",
+                "EL PASAJERO TIENE EL CINTURON MAL PUESTO",
+                "EL PASAJERO DISTRAE AL CONDUCOR",
+                "PARECE EL PASAJERO Y EL CONDUCTOR ESTAN TENIENDO UNA FUERTE DISCUSION",
+                "PARECE EL PASAJERO TIENE ALGO ILEGAL EN LAS MANOS",
+                "PARECE EL PASAJERO ESCONDIO ALGO BAJO LAS PIERBAS",
+                "PARECE EL PASAJERO SE ESTA HACIENDO UN PORRO",
+                "EL VEHICULO PARECE TIENE LA PRESION DE NEUMATICOS MUY BAJOS",
+                "EL CONDUCTOR ESTA COMIENDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET",
+                "EL CONDUCTOR ESTA MANIPULANDO UN IPOD",
+                "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV",
+                "EL CONDUCTOR SE ESTA MAQUILLANDOSE MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA PEINANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR SE ESTA AFEITANDO MIENTRAS CONDUCE",
+                "EL CONDUCTOR ESTA FUMANDO SIN MANTENER LA CONCENTRACION NECESARIA",
+                "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
+                "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCI",
+                "EL CONDUCTOR TIENE LA MUSICA DEL VEHICULO MUY ALTA",
+                "EL CONDUCTOR ESTA MANUPULANDO ALBARANES O FACTURAS"
+                };
+        private static Blip blipinfractor;
 
         public static void Main()
         {
@@ -76,78 +521,7 @@ namespace Traffic_Policer
                 {
                     while (true)
                     {
-                        GameFiber.Yield();                       
-
-                        if (CurrentSpeedCheckerState == SpeedCheckerStates.Speedgun)
-                        {
-                            if (Game.LocalPlayer.Character.Inventory.EquippedWeapon == null || Game.LocalPlayer.Character.Inventory.EquippedWeapon.Asset != speedgunWeapon
-                            || (Game.LocalPlayer.Character.CurrentVehicle.Exists() && Game.LocalPlayer.Character.CurrentVehicle.Speed >= 3f))
-                            {
-                                CurrentSpeedCheckerState = SpeedCheckerStates.Off;
-                                continue;
-                            }
-
-                            Game.DisableControlAction(0, GameControl.Attack, true);
-                            Game.DisableControlAction(0, GameControl.Attack2, true);
-                            Game.DisableControlAction(0, GameControl.MeleeAttack1, true);
-                            Game.DisableControlAction(0, GameControl.MeleeAttack2, true);
-                            Game.DisableControlAction(0, GameControl.VehicleAttack, true);
-                            //Game.DisableControlAction(0, GameControl.VehicleAttack2, true);
-                            if (NativeFunction.Natives.IS_DISABLED_CONTROL_JUST_PRESSED<bool>(0, 24))
-                            {
-                                Vehicle veh = null;
-                                try
-                                {
-                                    unsafe
-                                    {
-                                        uint entityHandle;
-                                        NativeFunction.Natives.x2975C866E6713290(Game.LocalPlayer, new IntPtr(&entityHandle)); // Stores the entity the player is aiming at in the uint provided in the second parameter.
-                                        Entity ent = World.GetEntityByHandle<Rage.Entity>(entityHandle);
-                                        if (ent is Ped)
-                                        {
-                                            veh = ((Ped)ent).CurrentVehicle;
-                                        }
-                                        else if (ent is Vehicle)
-                                        {
-                                            veh = (Vehicle)ent;
-                                        }
-
-                                    }
-                                }
-                                catch (Exception e) { }
-                                if (veh.Exists())
-                                {
-                                    TargetModel = veh.Model.Name;
-                                    TargetModel = char.ToUpper(TargetModel[0]) + TargetModel.Substring(1).ToLower();
-                                    if (SpeedUnit == "MPH")
-                                    {
-                                        TargetSpeed = (int)Math.Round(MathHelper.ConvertMetersPerSecondToMilesPerHour(veh.Speed));
-                                    }
-                                    else
-                                    {
-                                        TargetSpeed = MathHelper.ConvertMetersPerSecondToKilometersPerHourRounded(veh.Speed);
-                                    }
-                                    if (TargetSpeed >= SpeedToColourAt)
-                                    {
-                                        SpeedColour = Color.Red;
-                                        if (PlayFlagBlip)
-                                        {
-                                            if (!VehiclesBlipPlayedFor.Contains(veh))
-                                            {
-                                                VehiclesBlipPlayedFor.Add(veh);
-                                                FlagBlipPlayer.Play();
-                                                Game.DisplayNotification("~s~Model: ~b~" + TargetModel + "~n~~s~Speed: " + (SpeedColour == Color.Red ? "~r~" : "") + TargetSpeed + " " + SpeedUnit);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        SpeedColour = Color.White;
-                                    }
-                                }
-                            }
-                        }                       
-
+                        GameFiber.Yield();
                         if (Game.LocalPlayer.Character.IsInAnyVehicle(false) && (Albo1125.Common.CommonLibrary.ExtensionMethods.IsKeyDownRightNowComputerCheck(ToggleSpeedCheckerModifierKey) || ToggleSpeedCheckerModifierKey == Keys.None))
                         {
                             if (Albo1125.Common.CommonLibrary.ExtensionMethods.IsKeyDownComputerCheck(ToggleSpeedCheckerKey))
@@ -165,17 +539,17 @@ namespace Traffic_Policer
                                     else
                                     {
                                         Game.DisplaySubtitle("~h~Hold Speed Checker toggle to disable.", 3000);
-                                        if (CurrentSpeedCheckerState == SpeedCheckerStates.Average)
+                                        if (CurrentSpeedCheckerState == SpeedCheckerStates.Off)
                                         {
                                             ResetAverageSpeedCheck();
                                             CurrentSpeedCheckerState = SpeedCheckerStates.FixedPoint;
-                                            DisplayMaxSpeedMessage();
+
                                         }
                                         else if (CurrentSpeedCheckerState == SpeedCheckerStates.FixedPoint)
                                         {
                                             NativeFunction.Natives.DELETE_CHECKPOINT(CheckPoint);
-                                            CurrentSpeedCheckerState = SpeedCheckerStates.Average;
-                                            DisplayAverageSpeedCheckInstructions();
+                                            CurrentSpeedCheckerState = SpeedCheckerStates.Off;
+
                                         }
                                     }
                                 }
@@ -189,15 +563,11 @@ namespace Traffic_Policer
                                     {
                                         if (Game.LocalPlayer.Character.CurrentVehicle.Speed > 6f)
                                         {
-                                            CurrentSpeedCheckerState = SpeedCheckerStates.Average;
-                                            DisplayAverageSpeedCheckInstructions();
+                                            CurrentSpeedCheckerState = SpeedCheckerStates.FixedPoint;
                                         }
                                         else
                                         {
                                             CurrentSpeedCheckerState = SpeedCheckerStates.FixedPoint;
-
-                                            DisplayMaxSpeedMessage();
-
                                         }
                                     }
 
@@ -206,9 +576,7 @@ namespace Traffic_Policer
 
                                 }
                                 CheckPointPosition = Game.LocalPlayer.Character.GetOffsetPosition(new Vector3(0f, 8f, -1f));
-                                //xOffset = 0;
-                                //yOffset = 0;
-                                //zOffset = 0;
+
                             }
 
                         }
@@ -265,60 +633,32 @@ namespace Traffic_Policer
                                 zOffset--;
                             }
                             NativeFunction.Natives.DELETE_CHECKPOINT(CheckPoint);
-                            CheckPoint = NativeFunction.Natives.CREATE_CHECKPOINT<int>(46, CheckPointPosition.X, CheckPointPosition.Y, CheckPointPosition.Z, CheckPointPosition.X, CheckPointPosition.Y, CheckPointPosition.Z, 3.5f, 255, 0, 0, 255, 0);
+                            CheckPoint = NativeFunction.Natives.CREATE_CHECKPOINT<int>(40, CheckPointPosition.X, CheckPointPosition.Y, CheckPointPosition.Z, CheckPointPosition.X, CheckPointPosition.Y, CheckPointPosition.Z, 3.5f, 255, 0, 0, 255, 0);
                             NativeFunction.Natives.SET_CHECKPOINT_CYLINDER_HEIGHT(CheckPoint, 2f, 2f, 2f);
                         }
 
-                        if ((CurrentSpeedCheckerState == SpeedCheckerStates.FixedPoint && Game.LocalPlayer.Character.IsInAnyVehicle(false)) || CurrentSpeedCheckerState == SpeedCheckerStates.Speedgun)
+                        /*if ((CurrentSpeedCheckerState == SpeedCheckerStates.FixedPoint && Game.LocalPlayer.Character.IsInAnyVehicle(false)))
                         {
                             if (Albo1125.Common.CommonLibrary.ExtensionMethods.IsKeyDownComputerCheck(MaxSpeedUpKey))
                             {
                                 SpeedToColourAt += 5;
-                                DisplayMaxSpeedMessage();
+                                
                             }
                             if (Albo1125.Common.CommonLibrary.ExtensionMethods.IsKeyDownComputerCheck(MaxSpeedDownKey))
                             {
                                 SpeedToColourAt -= 5;
                                 if (SpeedToColourAt < 0) { SpeedToColourAt = 0; }
-                                DisplayMaxSpeedMessage();
+                                
                             }
-                        }
-
-                        else if (CurrentSpeedCheckerState == SpeedCheckerStates.Average && Game.LocalPlayer.Character.IsInAnyVehicle(false))
-                        {
-                            if (Albo1125.Common.CommonLibrary.ExtensionMethods.IsKeyDownComputerCheck(StartStopAverageSpeedCheckKey))
-                            {
-                                if (MeasuringAverageSpeed)
-                                {
-                                    StopAverageSpeedCheck();
-                                }
-                                else if (!MeasuringAverageSpeed && AverageSpeedCheckSecondsPassed == 0f)
-                                {
-                                    StartAverageSpeedCheck();
-                                }
-                                else
-                                {
-                                    Game.DisplayHelp("Reset the average speed check first using ~b~" + TrafficPolicerHandler.kc.ConvertToString(ResetAverageSpeedCheckKey));
-                                }
-                            }
-                            if (Albo1125.Common.CommonLibrary.ExtensionMethods.IsKeyDownComputerCheck(ResetAverageSpeedCheckKey))
-                            {
-                                if (!MeasuringAverageSpeed)
-                                {
-                                    ResetAverageSpeedCheck();
-                                }
-                                else
-                                {
-                                    Game.DisplayHelp("Stop current average speed check first using ~b~" + TrafficPolicerHandler.kc.ConvertToString(StartStopAverageSpeedCheckKey));
-                                }
-                            }
-                        }
+                        }*/
                     }
                 }
                 catch (Exception e) { NativeFunction.Natives.DELETE_CHECKPOINT(CheckPoint); throw; }
 
             });
         }
+
+
 
         private static void LowPriority()
         {
@@ -327,49 +667,6 @@ namespace Traffic_Policer
                 while (true)
                 {
                     GameFiber.Wait(100);
-
-                    foreach (Ped flaggeddriver in FlaggedDrivers.ToArray())
-                    {
-                        if (flaggeddriver.Exists())
-                        {
-                            if (flaggeddriver.DistanceTo(Game.LocalPlayer.Character) > 300f)
-                            {
-                                flaggeddriver.IsPersistent = false;
-                                //flaggeddriver.Dismiss();
-                                FlaggedDrivers.Remove(flaggeddriver);
-
-                            }
-                            else if (Functions.IsPlayerPerformingPullover())
-                            {
-                                if (Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) == flaggeddriver)
-                                {
-                                    FlaggedDrivers.Remove(flaggeddriver);
-
-                                }
-                            }
-                            else if (Functions.GetActivePursuit() != null)
-                            {
-                                if (Functions.GetPursuitPeds(Functions.GetActivePursuit()).Contains(flaggeddriver))
-                                {
-                                    FlaggedDrivers.Remove(flaggeddriver);
-
-                                }
-                            }
-                        }
-                        else
-                        {
-                            FlaggedDrivers.Remove(flaggeddriver);
-                        }
-
-                    }
-
-                    if (CurrentSpeedCheckerState != SpeedCheckerStates.Speedgun && Game.LocalPlayer.Character.Inventory.EquippedWeapon != null &&
-                    Game.LocalPlayer.Character.Inventory.EquippedWeapon.Asset == speedgunWeapon && !Game.LocalPlayer.Character.CurrentVehicle.Exists())
-                    {
-                        CurrentSpeedCheckerState = SpeedCheckerStates.Speedgun;
-                        DisplayMaxSpeedMessage();
-                    }
-
                     if (CurrentSpeedCheckerState == SpeedCheckerStates.FixedPoint && Game.LocalPlayer.Character.IsInAnyVehicle(false))
                     {
                         Entity[] WorldVehicles = World.GetEntities(CheckPointPosition, 7, GetEntitiesFlags.ConsiderAllVehicles | GetEntitiesFlags.ExcludePlayerVehicle);
@@ -395,10 +692,10 @@ namespace Traffic_Policer
                                     if (PlayFlagBlip)
                                     {
 
-                                        if (!VehiclesBlipPlayedFor.Contains(veh))
+                                        if (!VehiclesBlipPlayedFor.Contains(veh) && veh.IsEngineOn)
                                         {
                                             VehiclesBlipPlayedFor.Add(veh);
-                                            FlagBlipPlayer.Play();
+
                                             ShowVehicleNotification = true;
                                         }
 
@@ -413,94 +710,112 @@ namespace Traffic_Policer
                                 TargetFlag = "";
                                 TargetLicencePlate = veh.LicensePlate;
                                 FlagsTextColour = Color.White;
-                                if ((TrafficPolicerHandler.rnd.Next(101) <= FlagChance || VehiclesFlagged.Contains(veh)) && !veh.HasSiren && !VehiclesNotFlagged.Contains(veh))
+
+
+                                if (ShowVehicleNotification && veh.IsEngineOn)
                                 {
-                                    if (!VehiclesFlagged.Contains(veh))
-                                    {
-                                        VehiclesFlagged.Add(veh);
-                                    }
-                                    if (!VehicleDetails.IsVehicleInDetailsDatabase(veh))
-                                    {
-                                        VehicleDetails.AddVehicleToDetailsDatabase(veh, 25);
-                                    }
+                                    string dato = infracciones.PickRandom();
 
-                                    if (veh.IsStolen || VehicleDetails.GetInsuranceStatusForVehicle(veh) != EVehicleDetailsStatus.Valid)
-                                    {
-                                        if (veh.IsStolen)
-                                        {
-                                            TargetFlag = "Stolen";
-                                            FlagsTextColour = Color.Red;
-                                        }
-                                        else if (VehicleDetails.GetInsuranceStatusForVehicle(veh) != EVehicleDetailsStatus.Valid)
-                                        {
-                                            TargetFlag = "Uninsured";
-                                            FlagsTextColour = Color.Red;
-                                        }
-                                    }
+                                    string dato4 = infracciones4.PickRandom();
 
-                                    else
+                                    Ped conductor = veh.Driver;
+
+                                    if (dato != "NO SE HA DETECTADO NINGUNA INFRACCION" && dato4 != "NO SE HA DETECTADO NINGUNA INFRACCION")
                                     {
-                                        if (veh.HasDriver && veh.Driver.Exists())
+
+                                        if (veh.PassengerCount < 1)
                                         {
-                                            if (Functions.GetPersonaForPed(veh.Driver).Wanted)
+
+
+                                            blipinfractor = veh.AttachBlip();
+                                            blipinfractor.Color = Color.DarkRed;
+
+                                            FlagBlipPlayer.Play();
+                                            VehiclesBlipPlayedFor.Add(veh);
+
+                                            //MOVIL DETECTADO
+                                            if (dato == "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE" || dato == "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE" || dato == "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE" || dato == "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET" || dato == "EL CONDUCTOR ESTA MANIPULANDO UN IPOD"
+                                            || dato4 == "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE" || dato4 == "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE" || dato4 == "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE" || dato4 == "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET" || dato4 == "EL CONDUCTOR ESTA MANIPULANDO UN IPOD")
                                             {
-                                                TargetFlag = "Owner Wanted";
-                                                FlagsTextColour = Color.Red;
-                                            }
-                                            else if (Functions.GetPersonaForPed(veh.Driver).ELicenseState == LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Suspended)
-                                            {
-                                                TargetFlag = "Licence Suspended";
-                                                FlagsTextColour = Color.Red;
-                                            }
-                                            else if (Functions.GetPersonaForPed(veh.Driver).ELicenseState == LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Expired)
-                                            {
-                                                TargetFlag = "Licence Expired";
-                                                FlagsTextColour = Color.Orange;
-                                            }
-                                            else if (Functions.GetPersonaForPed(veh.Driver).Birthday.Month == DateTime.Now.Month && Functions.GetPersonaForPed(veh.Driver).Birthday.Day == DateTime.Now.Day)
-                                            {
-                                                TargetFlag = "Owner's Birthday";
-                                                FlagsTextColour = Color.Green;
+                                                Rage.Native.NativeFunction.Natives.TASK_USE_MOBILE_PHONE_TIMED(conductor, 100000);
                                             }
 
-                                            if (TargetFlag != "")
+                                            //NO LUCES DETECTADAS
+                                            if (dato == "EL VEHICULO NO LLEVA LAS LUCES PUESTAS" || dato4 == "EL VEHICULO NO LLEVA LAS LUCES PUESTAS")
                                             {
-                                                if (!FlaggedDrivers.Contains(veh.Driver))
+                                                if (World.TimeOfDay.Hours < 7 || World.TimeOfDay.Hours > 20)
                                                 {
-                                                    if (!veh.Driver.IsPersistent)
+                                                    Rage.Native.NativeFunction.Natives.SET_VEHICLE_LIGHTS(veh, 1);
+
+                                                    if (Functions.IsPlayerPerformingPullover() && Vector3.Distance(Game.LocalPlayer.Character.Position, veh.Position) < 20f)
                                                     {
-                                                        FlaggedDrivers.Add(veh.Driver);
-                                                        veh.Driver.IsPersistent = true;
+
+                                                        GameFiber.Wait(4000);
+
+                                                        if (veh.Exists())
+                                                        {
+                                                            Rage.Native.NativeFunction.Natives.SET_VEHICLE_LIGHTS(veh, 0);
+                                                        }
+                                                        break;
 
 
                                                     }
+
                                                 }
                                             }
-                                        }
-                                    }
-                                    if (PlayFlagBlip)
-                                    {
-                                        if (TargetFlag != "")
-                                        {
-                                            if (!VehiclesBlipPlayedFor.Contains(veh))
+
+                                            /*if (dato == "EL VEHICULO NO ESTA USANDO INTERMITENCIA" || dato4 == "EL VEHICULO NO ESTA USANDO INTERMITENCIA") 
                                             {
-                                                VehiclesBlipPlayedFor.Add(veh);
-                                                FlagBlipPlayer.Play();
-                                                ShowVehicleNotification = true;
-                                            }
+                                                while (Rage.Native.NativeFunction.Natives.SetVehicleIndicatorLights(veh, 1, true) || Rage.Native.NativeFunction.Natives.SetVehicleIndicatorLights(veh, 0, true)) {
+                                                    Rage.Native.NativeFunction.Natives.SetVehicleIndicatorLights(veh, 1, false);
+                                                    Rage.Native.NativeFunction.Natives.SetVehicleIndicatorLights(veh, 0, false);
+
+                                                }
+                                            }*/
+
+
+
+                                            InfraccionDetectada.Play();
+                                            Game.DisplayNotification("MATRICULA: ~b~" + TargetLicencePlate + "~n~~s~MARCA: ~b~" + TargetModel + "~n~~s~QUE VEO: " + dato);
+                                            GameFiber.Wait(15000);
+                                            if (blipinfractor.Exists()) { blipinfractor.Delete(); }
+
+
+
+
+
                                         }
+                                        else
+                                        {
+
+                                            blipinfractor = veh.AttachBlip();
+                                            blipinfractor.Color = Color.DarkRed;
+
+                                            FlagBlipPlayer.Play();
+                                            VehiclesBlipPlayedFor.Add(veh);
+
+                                            if (dato == "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE" || dato == "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE" || dato == "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE" || dato == "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET" || dato == "EL CONDUCTOR ESTA MANIPULANDO UN IPOD"
+                                           || dato4 == "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE" || dato4 == "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE" || dato4 == "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE" || dato4 == "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET" || dato4 == "EL CONDUCTOR ESTA MANIPULANDO UN IPOD")
+                                            {
+                                                Rage.Native.NativeFunction.Natives.TASK_USE_MOBILE_PHONE_TIMED(conductor, 100000);
+                                            }
+
+                                            InfraccionDetectada.Play();
+                                            Game.DisplayNotification("MATRICULA: ~b~" + TargetLicencePlate + "~n~~s~MARCA: ~b~" + TargetModel + "~n~~s~QUE VEO: " + dato4);
+                                            GameFiber.Wait(15000);
+                                            if (blipinfractor.Exists()) { blipinfractor.Delete(); }
+
+
+                                        }
+
+
+
+                                    }
+                                    if (dato == "NO SE HA DETECTADO NINGUNA INFRACCION" || dato4 == "NO SE HA DETECTADO NINGUNA INFRACCION")
+                                    {
+                                        Game.DisplayHelp("NO SE HA DETECTADO NINGUNA INFRACCION.");
                                     }
 
-
-                                }
-                                if (TargetFlag == "")
-                                {
-                                    VehiclesNotFlagged.Add(veh);
-                                }
-
-                                if (ShowVehicleNotification)
-                                {
-                                    Game.DisplayNotification("Plate: ~b~" + TargetLicencePlate + "~n~~s~Model: ~b~" + TargetModel + "~n~~s~Speed: " + (SpeedColour == Color.Red ? "~r~" : "") + TargetSpeed + " " + SpeedUnit + "~n~~s~Flags: ~r~" + TargetFlag);
                                 }
 
 
@@ -508,27 +823,6 @@ namespace Traffic_Policer
                         }
                     }
 
-                    else if (CurrentSpeedCheckerState == SpeedCheckerStates.Average && Game.LocalPlayer.Character.IsInAnyVehicle(false))
-                    {
-
-                        if (SpeedUnit == "MPH")
-                        {
-                            AverageSpeedCheckCurrentSpeed = (int)Math.Round(MathHelper.ConvertMetersPerSecondToMilesPerHour(Game.LocalPlayer.Character.CurrentVehicle.Speed));
-
-                        }
-                        else
-                        {
-                            AverageSpeedCheckCurrentSpeed = MathHelper.ConvertMetersPerSecondToKilometersPerHourRounded(Game.LocalPlayer.Character.CurrentVehicle.Speed);
-                        }
-                        if (MeasuringAverageSpeed)
-                        {
-                            AverageSpeedCheckDistance += Vector3.Distance(LastAverageSpeedCheckReferencePoint, Game.LocalPlayer.Character.CurrentVehicle.Position);
-                            LastAverageSpeedCheckReferencePoint = Game.LocalPlayer.Character.CurrentVehicle.Position;
-                            AverageSpeedCheckSecondsPassed = ((float)AverageSpeedCheckStopwatch.ElapsedMilliseconds) / 1000;
-                        }
-
-
-                    }
                 }
             });
         }
@@ -567,48 +861,23 @@ namespace Traffic_Policer
             AverageSpeedCheckerColor = Color.LightBlue;
         }
 
-        private static void DisplayMaxSpeedMessage()
-        {
-            Game.DisplayHelp("Max Speed: ~r~" + SpeedToColourAt.ToString() + SpeedUnit + "~n~~s~Configure with ~b~" + TrafficPolicerHandler.kc.ConvertToString(MaxSpeedUpKey) + "~s~ and ~b~" + TrafficPolicerHandler.kc.ConvertToString(MaxSpeedDownKey), 3000);
-        }
-
-        private static void DisplayAverageSpeedCheckInstructions()
-        {
-            Game.DisplayHelp("Average Speed Check. ~b~" + TrafficPolicerHandler.kc.ConvertToString(StartStopAverageSpeedCheckKey) + "~s~: Start/Stop. ~b~" + TrafficPolicerHandler.kc.ConvertToString(ResetAverageSpeedCheckKey) + "~s~: Reset", 6000);
-        }
-
         private static void DrawVehicleInfo(object sender, GraphicsEventArgs e)
         {
             if (CurrentSpeedCheckerState == SpeedCheckerStates.FixedPoint)
             {
+
+
                 Rectangle drawRect = new Rectangle(1, 250, 230, 117);
                 e.Graphics.DrawRectangle(drawRect, Color.FromArgb(200, Color.Black));
-                e.Graphics.DrawText("Plate: " + TargetLicencePlate, "Arial Bold", 20.0f, new PointF(3f, 253f), Color.White, drawRect);
-                e.Graphics.DrawText("Model: " + TargetModel, "Arial Bold", 20.0f, new PointF(3f, 278f), Color.White, drawRect);
+                e.Graphics.DrawText("MATRICULA: " + TargetLicencePlate, "Arial Bold", 20.0f, new PointF(3f, 253f), Color.White, drawRect);
+                e.Graphics.DrawText("MODELO: " + TargetModel, "Arial Bold", 20.0f, new PointF(3f, 278f), Color.White, drawRect);
+                e.Graphics.DrawText("", "Arial Bold", 20.0f, new PointF(3f, 303f), SpeedColour, drawRect);
+                //e.Graphics.DrawText("VELOCIAD FIJADA: " + SpeedToColourAt, "Arial Bold", 20.0f, new PointF(3f, 328f), FlagsTextColour, drawRect);
 
-                e.Graphics.DrawText("Speed: " + TargetSpeed + " " + SpeedUnit, "Arial Bold", 20.0f, new PointF(3f, 303f), SpeedColour, drawRect);
-                //e.Graphics.DrawText(TargetSpeedLimit, "Arial Bold", 15.0f, new PointF(3f, 293f), Color.White, drawRect);
-                e.Graphics.DrawText("Flags: " + TargetFlag, "Arial Bold", 20.0f, new PointF(3f, 328f), FlagsTextColour, drawRect);
 
-            }
-            else if (CurrentSpeedCheckerState == SpeedCheckerStates.Speedgun)
-            {
-                Rectangle drawRect = new Rectangle(1, 250, 230, 70);
-                e.Graphics.DrawRectangle(drawRect, Color.FromArgb(200, Color.Black));
-                e.Graphics.DrawText("Model: " + TargetModel, "Arial Bold", 20.0f, new PointF(3f, 253f), Color.White, drawRect);
-                e.Graphics.DrawText("Speed: " + TargetSpeed + " " + SpeedUnit, "Arial Bold", 20.0f, new PointF(3f, 278f), SpeedColour, drawRect);
 
             }
-            else if (CurrentSpeedCheckerState == SpeedCheckerStates.Average)
-            {
-                Rectangle drawRect = new Rectangle(1, 250, 230, 117);
-                e.Graphics.DrawRectangle(drawRect, Color.FromArgb(200, Color.Black));
-                e.Graphics.DrawText("D: " + AverageSpeedCheckDistance + "m", "Arial Bold", 20.0f, new PointF(3f, 253f), Color.White, drawRect);
-                e.Graphics.DrawText("T: " + AverageSpeedCheckSecondsPassed.ToString("N2") + "s", "Arial Bold", 20.0f, new PointF(3f, 278f), Color.White, drawRect);
-                e.Graphics.DrawText("O: " + AverageSpeedCheckCurrentSpeed + " " + SpeedUnit, "Arial Bold", 20.0f, new PointF(3f, 303f), Color.White, drawRect);
-                e.Graphics.DrawText("S: " + AverageSpeed.ToString("N2") + " " + SpeedUnit, "Arial Bold", 20.0f, new PointF(3f, 328f), AverageSpeedCheckerColor, drawRect);
 
-            }
         }
     }
 }
