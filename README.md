@@ -1,30 +1,55 @@
-# Traffic Policer
-Traffic Policer is a plugin for LSPDFR by Albo1125 with over one million downloads on lspdfr.com. Originally released in 2015, this is the second plugin for LSPDFR I wrote.
+# LSPDFR-Mi_Detector
+Un complemento para LSPDFR para ayudar a detener a los Vehiculos Infractores. Esto está construido a partir de el plugin Traffic Policer, por Albo1125
 
-[Download page here (contains plenty of info on features)](https://www.lcpdfr.com/files/file/8303-traffic-policer-breathalyzer-traffic-offences-speed-detection-more/)
 
-[Check out my YouTube channel](https://www.youtube.com/channel/UCSDMQS6b2roa-dZ0vAyaVWg)
+## ACLARACIONES
+MAS DEL 90% DE CODIGO ES DE ALBO1125 BASADO EN EL PLUGIN Traffic Policer
+Traffic Policer aún está vivo y se mantiene en código abierto, muchas de sus funciones ahora se han reemplazado con complementos más nuevos.
+Habia una caracteristica que me llamo mucho la atencion, y era el ambiente que se producia en el trafico, por ello decidi hacer este plugin
 
-[Why I'm open sourcing some of my LSPDFR plugins](https://www.lcpdfr.com/forums/topic/87615-open-sourcing-albo1125s-mods-retirement/)
 
-[All donations are welcome and appreciated](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T9T5RTSWX8PEY)
+## FUNCIONES MI DETECTOR
+* ES CAPAZA DE DETECTAR MAS DE 40 INFRACCIONES EN UN CONDUCTOR ASI COMO ANALIZAR COMPORTAMIENTOS EXTRAÑOS
+* EL VEHICULO QUE COMETIO UNA INFRACCION, SERA MARCADO EN EL MAPA
+* UN SISTEMA DE NOTIFICACION TANTO EN EL JUEGO COMO EN VOZ, EN EL MOMENTO QUE SE COMETA UNA INFRACCION UNA VOZ TE LO HARA SABER
 
-## Code & building
-Quite simple, clone the repo, place the below dependencies into a new **Traffic Policer/dependencies** folder. It should then build without issue.
 
-The code is FAR from perfect. 
-This project sprung into life just after I'd started learning C# and it originally started off as just a bit of toying around with ambient events.
-Quite a lot of old code and...cough...old bad practice remains today.
+## SOBRE TRAFFIC POLICER
+Si desea seguir utilizando Traffic Policer, no dude en consultar los enlaces a continuación, ya que la comunidad está tratando de mantener este gran mod funcionando en futuras versiones de LSPDFR.
 
-The code requires a large amount of refactoring and optimization work which I do not currently have the time for.
-If you feel like it, please feel free to contribute by submitting a Pull Request. 
-They may make it into a release and, of course, you'll be credited appropriately.
-Obviously, feel free to use this as a resource to learn from and improve your programming skills for RPH (credits appreciated, please see licence also if copying/using larger parts of the code).
+Traffic Policer, por Albo1125: https://www.lcpdfr.com/downloads/gta5mods/scripts/8303-traffic-policer-breathalyzer-traffic-offences-speed-detection-more
+Traffic Policer Git Hub: https: // github. com / Albo1125 / Traffic-Policer
 
-## Developer dependencies
-* [Albo1125.Common by Albo1125](http://www.lcpdfr.com/files/file/10294-albo1125common/)
-* [British Policing Script by Albo1125](https://www.lcpdfr.com/files/file/11468-british-policing-script-british-traffic-stops-persona-court-system/)
-* [LSPD First Response by G17 Media](https://www.lcpdfr.com/files/file/7792-lspd-first-response/)
-* [LSPDFR+ by Albo1125](https://www.lcpdfr.com/files/file/11930-lspdfr-improved-pursuit-ai-better-traffic-stops-court-system/)
-* [RAGENativeUI by Alexguirre](https://github.com/alexguirre/RAGENativeUI)
-* [RAGEPluginHook SDK by MulleDK19](http://ragepluginhook.net/Downloads.aspx)
+Instalación:
+1. tanto la carpeta plugins como la carpeta lspdfr que se encuentra dentro del .rar debeream ser movidas a la carpeta contenedora del GTA V.
+2. Edite las combinaciones de teclas en el .ini para una mejor experiencia
+
+
+
+
+## VERY SOON ENGLISH VERSION
+# LSPDFR-My_Detector
+An add-on to LSPDFR to help stop Violating Vehicles. This is built from the Traffic Policer plugin, by Albo1125
+
+
+## CLARIFICATIONS
+MORE THAN 90% OF THE CODE IS FROM ALBO1125 BASED ON THE Traffic Policer PLUGIN
+Traffic Policer is still alive and remains open source, many of its features have now been replaced with newer plugins.
+There was a feature that caught my attention, and it was the environment that occurred in traffic, so I decided to make this plugin
+
+
+## MY DETECTOR FUNCTIONS
+* IT IS CAPABLE OF DETECTING MORE THAN 40 INFRACTIONS IN A DRIVER AS WELL AS ANALYZING STRANGE BEHAVIORS
+* THE VEHICLE THAT COMMITTED AN INFRINGEMENT WILL BE MARKED ON THE MAP
+* A NOTIFICATION SYSTEM BOTH IN THE GAME AND IN VOICE, AT THE MOMENT A VIOLATION IS COMMITTED A VOICE WILL LET YOU KNOW
+
+
+## ABOUT TRAFFIC POLICER
+If you want to keep using Traffic Policer feel free to check out the links below as the community is trying to keep this great mod working in future versions of LSPDFR.
+
+Traffic Policer, by Albo1125: https://www.lcpdfr.com/downloads/gta5mods/scripts/8303-traffic-policer-breathalyzer-traffic-offences-speed-detection-more
+Traffic Policer Git Hub: https: // github. com / Albo1125 / Traffic-Policer
+
+Installation:
+1. both the plugins folder and the lspdfr folder that is inside the .rar should be moved to the GTA V containing folder.
+2. Edit the key combinations in the .ini for a better experience
