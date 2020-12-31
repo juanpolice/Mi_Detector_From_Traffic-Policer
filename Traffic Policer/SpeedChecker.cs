@@ -10,6 +10,7 @@ using Rage.Native;
 using System.Drawing;
 using System.Diagnostics;
 using Albo1125.Common.CommonLibrary;
+using StopThePed;
 
 namespace Traffic_Policer
 {
@@ -69,6 +70,15 @@ namespace Traffic_Policer
         public static Keys StartStopAverageSpeedCheckKey = Keys.PageUp;
         public static Keys ResetAverageSpeedCheckKey = Keys.PageDown;
         private static Color AverageSpeedCheckerColor = Color.White;
+
+        public enum estados
+        {
+            ALCOHOL,
+            DROGAS,
+            AMBOS
+        }
+
+
 
         private static string[] infracciones = {
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
@@ -250,8 +260,6 @@ namespace Traffic_Policer
                 "EL CONDUCTOR ESTA MANUPULANDO ALBARANES O FACTURAS"
                 };
 
-
-
         private static string[] infracciones4 = {
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
@@ -321,6 +329,7 @@ namespace Traffic_Policer
                 "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCIA",
                 "EL CONDUCTOR TIENE LA MUSICA DEL VEHICULO MUY ALTA"
                 };
+    
         private static string[] infracciones5 = {
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
@@ -408,6 +417,7 @@ namespace Traffic_Policer
                 "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA",
                 "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCI"
                 };
+       
         private static string[] infracciones6 = {
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
                 "NO SE HA DETECTADO NINGUNA INFRACCION",
@@ -508,6 +518,7 @@ namespace Traffic_Policer
                 "EL CONDUCTOR TIENE LA MUSICA DEL VEHICULO MUY ALTA",
                 "EL CONDUCTOR ESTA MANUPULANDO ALBARANES O FACTURAS"
                 };
+        
         private static Blip blipinfractor;
 
         public static void Main()
@@ -712,6 +723,8 @@ namespace Traffic_Policer
                                 FlagsTextColour = Color.White;
 
 
+
+
                                 if (ShowVehicleNotification && veh.IsEngineOn)
                                 {
                                     string dato = infracciones.PickRandom();
@@ -733,11 +746,19 @@ namespace Traffic_Policer
                                             FlagBlipPlayer.Play();
                                             VehiclesBlipPlayedFor.Add(veh);
 
+                                            
+  
                                             //MOVIL DETECTADO
                                             if (dato == "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE" || dato == "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE" || dato == "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE" || dato == "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET" || dato == "EL CONDUCTOR ESTA MANIPULANDO UN IPOD"
                                             || dato4 == "EL CONDUCTOR DEL VEHICULO ESTA USANDO EL MOVIL MIENTRAS CONDUCE" || dato4 == "EL CONDUCTOR DEL VEHICULO NO TIENE AMBAS MANOS AL VOLANTE" || dato4 == "EL CONDUCTOR ESTA CONTROLANDO EL GPS MIENTRAS CONDUCE" || dato4 == "EL CONDUCTOR ESTA MANIPULANDO UNA TABLET" || dato4 == "EL CONDUCTOR ESTA MANIPULANDO UN IPOD")
                                             {
                                                 Rage.Native.NativeFunction.Natives.TASK_USE_MOBILE_PHONE_TIMED(conductor, 100000);
+                                            }
+
+                                            //REGISTRO DE ITV NO ESTA AL DIA
+                                            if (dato == "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV" || dato4 == "EL CONDUCTOR NO TIENE PUESTA LA PEGATINA DE LA ITV") 
+                                            {
+                                                StopThePed.API.Functions.setVehicleRegistrationStatus(veh, StopThePed.API.STPVehicleStatus.Expired);
                                             }
 
                                             //NO LUCES DETECTADAS
@@ -762,6 +783,52 @@ namespace Traffic_Policer
                                                     }
 
                                                 }
+                                            }
+
+
+                                            //CASO DROGAS
+                                            
+
+                                            if (dato == "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA" || dato == "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS" || dato == "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCIA" || dato == "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE HABER BEBIDO ALGO"
+                                            ||  dato4 == "EL CONDUCTOR TIENE UNA ACTITUD AGRESIVA SOBRE LA VIA" || dato4 == "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE CONSUMIR DROGAS" || dato4 == "PARECE QUE EL CONDUCTOR ESTA CONDUCIENDO BAJO INDICIOS DE SOMNOLENCIA" || dato4 == "SE VE AL CONDUCTOR POCO CENTRADO Y POSIBLES SINTOMAS DE HABER BEBIDO ALGO") 
+                                            {
+                                                float speed = veh.Speed;
+                                                if (speed <= 12f)
+                                                {
+                                                    speed = 12.1f;
+                                                }
+
+
+                                                estados d = (estados)(new Random()).Next(0, 4);
+                                                switch (d) {
+                                                    case estados.ALCOHOL:
+
+                                                        StopThePed.API.Functions.setPedAlcoholOverLimit(conductor, true);
+                                                        Rage.Native.NativeFunction.Natives.SET_DRIVE_TASK_DRIVING_STYLE(conductor, 786603);
+                                                        conductor.Tasks.CruiseWithVehicle(veh, speed, (VehicleDrivingFlags.FollowTraffic | VehicleDrivingFlags.YieldToCrossingPedestrians));
+                                                        break;
+                                                    case estados.DROGAS:
+                                                        StopThePed.API.Functions.setPedUnderDrugsInfluence(conductor, true);
+                                                        Rage.Native.NativeFunction.Natives.SET_DRIVE_TASK_DRIVING_STYLE(conductor, 786603);
+                                                        conductor.Tasks.CruiseWithVehicle(veh, speed, (VehicleDrivingFlags.FollowTraffic | VehicleDrivingFlags.YieldToCrossingPedestrians));
+                                                        break;
+                                                    case estados.AMBOS:
+                                                        StopThePed.API.Functions.setPedUnderDrugsInfluence(conductor, true);
+                                                        StopThePed.API.Functions.setPedAlcoholOverLimit(conductor, true);
+                                                        Rage.Native.NativeFunction.Natives.SET_DRIVE_TASK_DRIVING_STYLE(conductor, 786603);
+                                                        conductor.Tasks.CruiseWithVehicle(veh, speed, (VehicleDrivingFlags.FollowTraffic | VehicleDrivingFlags.YieldToCrossingPedestrians));
+                                                        break;
+                                                    default:
+                                                        StopThePed.API.Functions.setPedAlcoholOverLimit(conductor, false);
+                                                        StopThePed.API.Functions.setPedAlcoholOverLimit(conductor, false);
+                                                        break;
+
+
+                                                }
+
+
+
+
                                             }
 
                                             /*if (dato == "EL VEHICULO NO ESTA USANDO INTERMITENCIA" || dato4 == "EL VEHICULO NO ESTA USANDO INTERMITENCIA") 

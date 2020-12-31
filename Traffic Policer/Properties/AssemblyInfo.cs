@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Midetector")]
 [assembly: AssemblyDescription("Midetectorr enhances LSPDFR traffic policing.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Albo1125")]
+[assembly: AssemblyCompany("-Albo1125-")]
 [assembly: AssemblyProduct("Midetector")]
 [assembly: AssemblyCopyright("Copyright a©  2016-2019 - Albo1125")]
 [assembly: AssemblyTrademark("")]
